@@ -1,0 +1,54 @@
+
+.nav
+{
+    background-color:#7091E6;
+    overflow: hidden;
+    border-radius: 1cap;
+
+
+}
+.nav a{
+    float: left;
+    display: block;
+    color: rgba(255, 255, 255, 0.862);
+    text-align: center;
+    padding: 14px 20px;
+    text-decoration: none;
+    font-size: x-large;
+
+}
+.nav a:hover{
+    background-color: #adadad;
+    color: #8697c4;
+
+}
+.nav a.active{
+    background-color: #fbe9d0;
+    color: #a690a6;
+}
+
+.social-links
+{
+    display: flexbox;
+    size:1cap;
+    background-color: #7091E6;
+
+}
+
+header{
+    background-color: aquamarine;
+    float: left;
+    display: block;
+    text-align: center;
+    border: 2cap;
+    border: #7091E6;
+    border-width: 10cap;
+    padding: 14px 20px;
+    text-decoration: wavy;
+    font-size: x-large;
+    font-style: normal;
+}
+
+footer{
+
+}
