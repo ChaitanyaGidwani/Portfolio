@@ -1,4 +1,13 @@
 
+body {
+    min-height: 100vh;           /* Ensures the body fills at least the viewport */
+    display: flex;               /* Enables Flexbox layout */
+    flex-direction: column;      /* Stacks children vertically */
+  }
+  footer {
+    margin-top: auto;            /* Pushes the footer down when content is short */
+  }
+  
 .nav
 {
     background-color:#7091E6;
@@ -47,8 +56,22 @@ header{
     text-decoration: wavy;
     font-size: x-large;
     font-style: normal;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+    
 }
 
 footer{
+    background-color: beige;
+    float: right;
+    display: block;
+    text-align: center;
+    border: 2cap;
+    border: #7091E6;
+    border-width: 10cap;
+    padding: 14px 20px;
+    text-decoration: wavy;
+    font-size: x-large;
+    font-style: normal;
 
 }
