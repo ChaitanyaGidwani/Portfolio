@@ -2,7 +2,7 @@
 
 import React from "react";
 
-type WinId = "terminal" | "projects" | "about" | "skills" | "agent" | "contact";
+type WinId = "terminal" | "projects" | "about" | "skills" | "resume" | "agent" | "contact";
 
 interface WinState {
   open: boolean;
@@ -54,11 +54,12 @@ const WIN_DEFS: {
   label: string;
   wpx: number;
 }[] = [
-  { id: "terminal", title: "terminal — cg.sh", icon: ">_", label: "terminal", wpx: 520 },
+  { id: "terminal", title: "terminal — chaitanya.sh", icon: ">_", label: "terminal", wpx: 520 },
   { id: "projects", title: "projects.exe", icon: "▣", label: "projects", wpx: 560 },
   { id: "about", title: "about.md", icon: "☰", label: "about", wpx: 480 },
   { id: "skills", title: "skills.json", icon: "▦", label: "skills", wpx: 540 },
-  { id: "agent", title: "cg.agent — live", icon: "✦", label: "agent", wpx: 460 },
+  { id: "resume", title: "resume.pdf", icon: "▤", label: "resume", wpx: 560 },
+  { id: "agent", title: "chaitanya.agent — live", icon: "✦", label: "agent", wpx: 460 },
   { id: "contact", title: "contact.sh", icon: "@", label: "contact", wpx: 440 },
 ];
 
@@ -103,7 +104,7 @@ const THEMES: Record<string, { cyan: string; pink: string }> = {
   "Solar Flare": { cyan: "#ffb020", pink: "#ff4d3d" },
 };
 
-export default class CgOs extends React.Component<Record<string, never>, State> {
+export default class ChaitanyaOs extends React.Component<Record<string, never>, State> {
   state: State = {
     booting: true,
     zTop: 10,
@@ -112,10 +113,11 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
       projects: { open: true, x: 640, y: 90, z: 8 },
       about: { open: false, x: 140, y: 150, z: 7 },
       skills: { open: false, x: 720, y: 210, z: 6 },
+      resume: { open: false, x: 200, y: 110, z: 4 },
       agent: { open: false, x: 380, y: 120, z: 5 },
       contact: { open: false, x: 260, y: 200, z: 3 },
     },
-    tlog: "CG_OS v2.0 — agentic build\nType `help` for commands.\n",
+    tlog: "CHAITANYA_OS v2.0 — agentic build\nType `help` for commands.\n",
     tdraft: "",
     messages: [],
     draft: "",
@@ -173,13 +175,13 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
       case "whoami":
         return "chaitanya.gidwani — full-stack developer × agentic-ai engineer\nedu: b.tech cse @ abes engineering college (2024–2028)\nlocation: ghaziabad, india · status: seeking swe internship";
       case "neofetch":
-        return "CG_OS 2.0 (agentic)\n────────────────\nhost: chaitanya.gidwani\nshell: cg.sh\nagents: 1 online\nrepos: 3 shipped\nhackathons: 2× runner-up · sih 2025 qualifier";
+        return "CHAITANYA_OS 2.0 (agentic)\n────────────────\nhost: chaitanya.gidwani\nshell: chaitanya.sh\nagents: 1 online\nrepos: 3 shipped\nhackathons: 2× runner-up · sih 2025 qualifier";
       case "clear":
         this.setState({ tlog: "" });
         return null;
       case "hijack":
         this.runHijack();
-        return "> ceding pointer control to cg.agent…\n> (shake your mouse hard to fight it for the cursor)";
+        return "> ceding pointer control to chaitanya.agent…\n> (shake your mouse hard to fight it for the cursor)";
       case "wall": {
         const t = (cmd.text || "").trim();
         if (!t) return "! usage: wall <text>  (try: wall HIRE ME) — `wall reset` restores";
@@ -193,7 +195,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
         return (
           "open <" +
           names.join("|") +
-          ">\nclose <win>\ntheme <mint|violet|solar>\nhijack → let cg.agent drive the OS\nwall <text> → rewrite the particle wallpaper\nautopilot <on|off> → agent takes over when you idle\nls · whoami · neofetch · clear\nask <anything> → routes to cg.agent"
+          ">\nclose <win>\ntheme <mint|violet|solar>\nhijack → let chaitanya.agent drive the OS\nwall <text> → rewrite the particle wallpaper\nautopilot <on|off> → agent takes over when you idle\nls · whoami · neofetch · clear\nask <anything> → routes to chaitanya.agent"
         );
       default:
         return null;
@@ -245,7 +247,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
       return;
     }
     if (cmd.kind === "ask") {
-      this.setState({ tlog: log + "> routing to cg.agent…\n", tdraft: "" });
+      this.setState({ tlog: log + "> routing to chaitanya.agent…\n", tdraft: "" });
       this.setWin("agent", { open: true });
       this.focusWin("agent");
       this.send(cmd.q);
@@ -301,9 +303,9 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
 
     // boot typing
     const lines = [
-      "$ boot cg_os --agentic",
+      "$ boot chaitanya_os --agentic",
       "> mounting /builds (3 repos) ✓",
-      "> starting cg.agent … online ✓",
+      "> starting chaitanya.agent … online ✓",
       "> compiling wallpaper: 4k particles ✓",
       "> welcome, visitor.",
     ];
@@ -349,7 +351,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
     this.resetIdle();
   }
 
-  // ---------- ghost cursor: cg.agent's physical pointer ----------
+  // ---------- ghost cursor: chaitanya.agent's physical pointer ----------
   initGhost(root: HTMLElement) {
     const el = root.querySelector("[data-ghost]") as HTMLElement | null;
     if (!el) return;
@@ -446,7 +448,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
       if (++resist > 34) {
         clearTimeout(this._ghostT);
         hide();
-        this.setState((s) => ({ tlog: s.tlog + "! cg.agent: fine — you drive.\n" }));
+        this.setState((s) => ({ tlog: s.tlog + "! chaitanya.agent: fine — you drive.\n" }));
       }
     };
     this.ghostRun = (ops: GhostOp[]) => {
@@ -471,7 +473,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
     if (this._autopilot === false) return;
     this._idleT = setTimeout(() => {
       if (this.state.booting) return;
-      this.setState((s) => ({ tlog: s.tlog + "! cg.agent: you went quiet — I'll drive.\n" }));
+      this.setState((s) => ({ tlog: s.tlog + "! chaitanya.agent: you went quiet — I'll drive.\n" }));
       this.setWall("STILL HERE?");
       this.runHijack();
       this._idleT2 = setTimeout(() => this.setWall(null), 9000);
@@ -694,7 +696,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
         ref={(el) => {
           this.root = el;
         }}
-        className="cgos"
+        className="chaitanya-os"
         style={{
           position: "relative",
           width: "100vw",
@@ -753,7 +755,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
         >
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
             <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 13 }}>
-              CG<span style={{ color: "var(--cyan)" }}>_OS</span>
+              CHAITANYA<span style={{ color: "var(--cyan)" }}>_OS</span>
             </span>
             <span style={{ color: "var(--muted)" }}>v2.0 · agentic build</span>
           </div>
@@ -768,7 +770,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
                   animation: "dotPulse 2s infinite",
                 }}
               />
-              cg.agent ONLINE
+              chaitanya.agent ONLINE
             </span>
             <span data-clock="">--:--:--</span>
           </div>
@@ -860,6 +862,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
                 {d.id === "projects" && this.renderProjects()}
                 {d.id === "about" && this.renderAbout()}
                 {d.id === "skills" && this.renderSkills()}
+                {d.id === "resume" && this.renderResume()}
                 {d.id === "agent" && this.renderAgent(chips)}
                 {d.id === "contact" && this.renderContact()}
               </div>
@@ -923,7 +926,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
           })}
         </div>
 
-        {/* GHOST CURSOR (cg.agent's physical pointer) */}
+        {/* GHOST CURSOR (chaitanya.agent's physical pointer) */}
         <div
           data-ghost=""
           style={{
@@ -959,7 +962,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
               whiteSpace: "nowrap",
             }}
           >
-            cg.agent
+            chaitanya.agent
           </span>
         </div>
 
@@ -1149,6 +1152,71 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
     );
   }
 
+  renderResume() {
+    const h = (t: string) => (
+      <div style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: ".08em", color: "var(--pink)", margin: "14px 0 7px" }}>
+        {t}
+      </div>
+    );
+    const row = (l: string, r: string) => (
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+        <span style={{ fontWeight: 700, color: "var(--fg)" }}>{l}</span>
+        <span style={{ fontFamily: MONO, fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>{r}</span>
+      </div>
+    );
+    return (
+      <div style={{ padding: "4px 18px 18px", fontFamily: MONO, fontSize: 12.5, lineHeight: 1.7, color: "#c3cecc" }}>
+        {h("SUMMARY")}
+        <p style={{ margin: 0 }}>
+          CS undergraduate and full-stack developer shipping production-grade AI products end to end — multi-source
+          data pipelines, multi-agent backends, real API integrations, cloud deployment. Hackathon runner-up and SIH
+          2025 qualifier seeking a Software Developer / SWE internship.
+        </p>
+        {h("EDUCATION")}
+        {row("B.Tech CSE — ABES Engineering College (AKTU)", "2024 – 2028")}
+        {h("EXPERIENCE")}
+        {row("Technovation (ABESEC) — Technical Team Member", "Jun 2025 – Present")}
+        <p style={{ margin: "4px 0 0" }}>
+          Organized 2 major campus programs: CyberQuest (flagship technical event) and a 5-day offline Quantum
+          Computing workshop — registrations, logistics, onboarding, on-ground technical ops.
+        </p>
+        {h("PROJECTS")}
+        <p style={{ margin: 0 }}>
+          Argus (opportunity aggregator, 200+ live listings, dual-LLM backend) · LaunchCopilot (AI launch automation,
+          runner-up @ HackOnVibe 2026) · MarketMind (multi-agent marketing platform, 8 microservices) — details in
+          projects.exe
+        </p>
+        {h("ACHIEVEMENTS")}
+        <p style={{ margin: 0 }}>
+          SIH 2025 internal round cleared (328 teams) · 2nd @ HackOnVibe 2026 · 2nd @ intra-club Buildathon ·
+          Hacktoberfest 2025 contributor · IEEE student member · NSS &amp; Trishul clubs
+        </p>
+        {h("CONTACT")}
+        <p style={{ margin: 0 }}>
+          chaitanya13197@gmail.com · +91 9792538186 · Ghaziabad (UP), India
+        </p>
+        <a
+          href="/resume.pdf"
+          download="Chaitanya_Gidwani_Resume.pdf"
+          style={{
+            display: "inline-block",
+            marginTop: 16,
+            background: "var(--cyan)",
+            color: "#050507",
+            fontWeight: 700,
+            padding: "11px 22px",
+            borderRadius: 4,
+            fontSize: 12,
+            letterSpacing: ".05em",
+            fontFamily: DISPLAY,
+          }}
+        >
+          DOWNLOAD PDF ▾
+        </a>
+      </div>
+    );
+  }
+
   renderAgent(chips: { label: string; onClick: () => void }[]) {
     const { messages, loading, draft } = this.state;
     return (
@@ -1171,7 +1239,7 @@ export default class CgOs extends React.Component<Record<string, never>, State> 
           {messages.length === 0 && (
             <div>
               <p style={{ margin: "0 0 12px", fontFamily: MONO, fontSize: 12.5, lineHeight: 1.65, color: "#b8c4c2" }}>
-                $ cg.agent online. I answer as Chaitanya — and I can drive this OS. Try &quot;open projects and tell me
+                $ chaitanya.agent online. I answer as Chaitanya — and I can drive this OS. Try &quot;open projects and tell me
                 about MarketMind&quot;.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
