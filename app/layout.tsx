@@ -14,7 +14,7 @@ const unbounded = Unbounded({
 });
 
 export const metadata: Metadata = {
-  title: "Chaitanya Gidwani — CG_OS",
+  title: "Chaitanya Gidwani — CHAITANYA_OS",
   description:
     "Operating-system portfolio of Chaitanya Gidwani — full-stack developer and agentic-AI engineer.",
 };

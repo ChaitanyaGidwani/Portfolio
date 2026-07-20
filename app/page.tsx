@@ -1,5 +1,5 @@
-import CgOs from "@/components/CgOs";
+import ChaitanyaOs from "@/components/ChaitanyaOs";
 
 export default function Home() {
-  return <CgOs />;
+  return <ChaitanyaOs />;
 }
