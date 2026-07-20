@@ -1,0 +1,95 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #050507;
+  color: #eef4f3;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+::selection {
+  background: var(--cyan, #20f4d2);
+  color: #050507;
+}
+
+a {
+  color: #eef4f3;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--cyan, #20f4d2);
+}
+
+input,
+textarea,
+button {
+  font-family: inherit;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(238, 244, 243, 0.15);
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes winIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes scanline {
+  from {
+    transform: translateY(-140px);
+  }
+  to {
+    transform: translateY(100vh);
+  }
+}
+
+.cgos {
+  --bg: #050507;
+  --fg: #eef4f3;
+  --muted: #7e8a88;
+  --line: rgba(238, 244, 243, 0.14);
+  --cyan: #20f4d2;
+  --pink: #ff2ea6;
+  --win: rgba(10, 10, 14, 0.95);
+}
