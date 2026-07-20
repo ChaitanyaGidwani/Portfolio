@@ -18,6 +18,7 @@ interface Msg {
 
 interface State {
   booting: boolean;
+  hint: boolean;
   zTop: number;
   win: Record<WinId, WinState>;
   tlog: string;
@@ -107,10 +108,11 @@ const THEMES: Record<string, { cyan: string; pink: string }> = {
 export default class ChaitanyaOs extends React.Component<Record<string, never>, State> {
   state: State = {
     booting: true,
+    hint: true,
     zTop: 10,
     win: {
-      terminal: { open: true, x: 60, y: 64, z: 9 },
-      projects: { open: true, x: 640, y: 90, z: 8 },
+      terminal: { open: false, x: 60, y: 64, z: 9 },
+      projects: { open: false, x: 640, y: 90, z: 8 },
       about: { open: false, x: 140, y: 150, z: 7 },
       skills: { open: false, x: 720, y: 210, z: 6 },
       resume: { open: false, x: 200, y: 110, z: 4 },
@@ -156,8 +158,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
     switch (cmd.kind) {
       case "open":
         if (!names.includes(cmd.target as WinId)) return "! no such window: " + cmd.target;
-        this.setWin(cmd.target as WinId, { open: true });
-        this.focusWin(cmd.target as WinId);
+        this.openWin(cmd.target as WinId);
         return "> opened " + cmd.target;
       case "close":
         if (!names.includes(cmd.target as WinId)) return "! no such window: " + cmd.target;
@@ -190,12 +191,13 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
       }
       case "autopilot":
         this._autopilot = cmd.arg !== "off";
+        this.resetIdle();
         return "> autopilot " + (this._autopilot ? "ON — go idle for 35s and watch" : "OFF");
       case "help":
         return (
           "open <" +
           names.join("|") +
-          ">\nclose <win>\ntheme <mint|violet|solar>\nhijack → let chaitanya.agent drive the OS\nwall <text> → rewrite the particle wallpaper\nautopilot <on|off> → agent takes over when you idle\nls · whoami · neofetch · clear\nask <anything> → routes to chaitanya.agent"
+          ">\nclose <win>\ntheme <mint|violet|solar>\nhijack → let chaitanya.agent drive the OS\nwall <text> → rewrite the particle wallpaper\nautopilot <on|off> → agent takes over when you idle (off by default)\nls · whoami · neofetch · clear\nask <anything> → routes to chaitanya.agent"
         );
       default:
         return null;
@@ -248,8 +250,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
     }
     if (cmd.kind === "ask") {
       this.setState({ tlog: log + "> routing to chaitanya.agent…\n", tdraft: "" });
-      this.setWin("agent", { open: true });
-      this.focusWin("agent");
+      this.openWin("agent");
       this.send(cmd.q);
       return;
     }
@@ -263,7 +264,24 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
 
   // ---------- window mgmt ----------
   setWin(id: WinId, patch: Partial<WinState>) {
-    this.setState((s) => ({ win: { ...s.win, [id]: { ...s.win[id], ...patch } } }));
+    this.setState((s) => ({
+      win: { ...s.win, [id]: { ...s.win[id], ...patch } },
+      // first interaction: retire the onboarding hint once any window opens
+      hint: s.hint && !patch.open,
+    }));
+  }
+
+  // open + focus, clamping the stored position so the window stays on screen
+  openWin(id: WinId) {
+    const def = WIN_DEFS.find((w) => w.id === id);
+    const w = this.state.win[id];
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const ww = Math.min(def ? def.wpx : 480, vw * 0.94);
+    const x = Math.min(Math.max(8, w.x), Math.max(8, vw - ww - 8));
+    const y = Math.min(Math.max(44, w.y), Math.max(44, vh - 220));
+    this.setWin(id, { open: true, x, y });
+    this.focusWin(id);
   }
 
   focusWin(id: WinId) {
@@ -307,7 +325,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
       "> mounting /builds (3 repos) ✓",
       "> starting chaitanya.agent … online ✓",
       "> compiling wallpaper: 4k particles ✓",
-      "> welcome, visitor.",
+      "> desktop ready — it's all yours.",
     ];
     let li = 0,
       ci = 0,
@@ -470,7 +488,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
 
   resetIdle() {
     clearTimeout(this._idleT);
-    if (this._autopilot === false) return;
+    if (this._autopilot !== true) return; // opt-in only: `autopilot on` in the terminal
     this._idleT = setTimeout(() => {
       if (this.state.booting) return;
       this.setState((s) => ({ tlog: s.tlog + "! chaitanya.agent: you went quiet — I'll drive.\n" }));
@@ -751,6 +769,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
             fontFamily: MONO,
             fontSize: 12,
             letterSpacing: ".06em",
+            animation: booting ? "none" : "fadeUp .5s ease .15s backwards",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
@@ -870,6 +889,37 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
           );
         })}
 
+        {/* ONBOARDING HINT — retires on first window open */}
+        {!booting && this.state.hint && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: 92,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 44,
+              fontFamily: MONO,
+              fontSize: 12,
+              letterSpacing: ".08em",
+              color: "var(--muted)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 14px",
+              border: "1px solid var(--line)",
+              borderRadius: 6,
+              background: "rgba(5,5,7,.6)",
+              backdropFilter: "blur(6px)",
+              pointerEvents: "none",
+              whiteSpace: "nowrap",
+              animation: "fadeUpCentered .6s ease 1.1s backwards",
+            }}
+          >
+            <span style={{ color: "var(--cyan)", animation: "blink 1.2s infinite" }}>▸</span>
+            this desktop is yours — open anything from the dock below
+          </div>
+        )}
+
         {/* DOCK */}
         <div
           style={{
@@ -885,6 +935,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
             borderRadius: 10,
             background: "rgba(5,5,7,.75)",
             backdropFilter: "blur(10px)",
+            animation: booting ? "none" : "fadeUpCentered .5s ease .4s backwards",
           }}
         >
           {WIN_DEFS.map((d) => {
@@ -898,8 +949,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
                   if (open && win[d.id].z === this.state.zTop) {
                     this.setWin(d.id, { open: false });
                   } else {
-                    this.setWin(d.id, { open: true });
-                    this.focusWin(d.id);
+                    this.openWin(d.id);
                   }
                 }}
                 style={{
