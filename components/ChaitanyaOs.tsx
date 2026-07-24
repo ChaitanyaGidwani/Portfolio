@@ -608,9 +608,16 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
           : [custom]
         : ["CHAITANYA", "GIDWANI"];
       const longest = Math.max(...lines.map((l) => l.length), 1);
-      const fs = Math.min(W / (longest * 0.68), H / 3.6);
+      let fs = Math.min(W / (longest * 0.68), H / 3.6);
       const fam = getComputedStyle(root).getPropertyValue("--font-display").trim() || "sans-serif";
       o.font = "900 " + fs + "px " + fam;
+      // fit to actual glyph widths: the per-char estimate above overshoots for wide fonts
+      const maxLineW = Math.max(...lines.map((l) => o.measureText(l).width), 1);
+      const targetW = W * 0.92;
+      if (maxLineW > targetW) {
+        fs *= targetW / maxLineW;
+        o.font = "900 " + fs + "px " + fam;
+      }
       const y0 = H * 0.42 + (lines.length === 1 ? fs * 0.5 : 0);
       lines.forEach((l, i) => o.fillText(l, W / 2, y0 + i * fs * 1.02));
       const data = o.getImageData(0, 0, W, H).data;
