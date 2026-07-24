@@ -19,6 +19,7 @@ interface Msg {
 interface State {
   booting: boolean;
   hint: boolean;
+  mobile: boolean;
   zTop: number;
   win: Record<WinId, WinState>;
   tlog: string;
@@ -109,6 +110,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
   state: State = {
     booting: true,
     hint: true,
+    mobile: false,
     zTop: 10,
     win: {
       terminal: { open: false, x: 60, y: 64, z: 9 },
@@ -143,7 +145,10 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
   private _raf = 0;
   private _mm?: (e: MouseEvent) => void;
   private _mu?: () => void;
+  private _tm?: (e: TouchEvent) => void;
+  private _tu?: () => void;
   private _onResize?: () => void;
+  private _onResizeMobile?: () => void;
   private _rebuild?: () => void;
   private _ghostTick?: (now: number) => void;
   private ghostResist?: () => void;
@@ -277,6 +282,16 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
     const w = this.state.win[id];
     const vw = window.innerWidth;
     const vh = window.innerHeight;
+    // mobile: full-width windows cascaded down so they don't perfectly overlap
+    if (vw <= 640) {
+      const openCount = (Object.keys(this.state.win) as WinId[]).filter(
+        (k) => this.state.win[k].open && k !== id
+      ).length;
+      const y = Math.min(52 + openCount * 24, Math.max(52, vh - 260));
+      this.setWin(id, { open: true, x: 8, y });
+      this.focusWin(id);
+      return;
+    }
     const ww = Math.min(def ? def.wpx : 480, vw * 0.94);
     const x = Math.min(Math.max(8, w.x), Math.max(8, vw - ww - 8));
     const y = Math.min(Math.max(44, w.y), Math.max(44, vh - 220));
@@ -296,6 +311,15 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
     e.preventDefault();
     const w = this.state.win[id];
     this._drag = { id, dx: e.clientX - w.x, dy: e.clientY - w.y };
+    this.focusWin(id);
+  }
+
+  startDragTouch(e: React.TouchEvent, id: WinId) {
+    if ((e.target as HTMLElement).tagName === "BUTTON") return;
+    const t = e.touches[0];
+    if (!t) return;
+    const w = this.state.win[id];
+    this._drag = { id, dx: t.clientX - w.x, dy: t.clientY - w.y };
     this.focusWin(id);
   }
 
@@ -363,6 +387,33 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
     };
     window.addEventListener("mousemove", this._mm);
     window.addEventListener("mouseup", this._mu);
+
+    // touch equivalents so windows can be dragged (and the wallpaper reacts) on mobile
+    this._tm = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      this._mouse = { x: t.clientX, y: t.clientY };
+      this.resetIdle();
+      if (this._drag) {
+        e.preventDefault();
+        const { id, dx, dy } = this._drag;
+        this.setWin(id, { x: Math.max(0, t.clientX - dx), y: Math.max(44, t.clientY - dy) });
+      }
+    };
+    this._tu = () => {
+      this._drag = null;
+    };
+    window.addEventListener("touchmove", this._tm, { passive: false });
+    window.addEventListener("touchend", this._tu);
+
+    // track viewport size for the mobile layout switch
+    const syncMobile = () => {
+      const m = window.innerWidth <= 640;
+      if (m !== this.state.mobile) this.setState({ mobile: m });
+    };
+    syncMobile();
+    this._onResizeMobile = syncMobile;
+    window.addEventListener("resize", this._onResizeMobile);
 
     this.initWallpaper(root);
     this.initGhost(root);
@@ -557,9 +608,16 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
           : [custom]
         : ["CHAITANYA", "GIDWANI"];
       const longest = Math.max(...lines.map((l) => l.length), 1);
-      const fs = Math.min(W / (longest * 0.68), H / 3.6);
+      let fs = Math.min(W / (longest * 0.68), H / 3.6);
       const fam = getComputedStyle(root).getPropertyValue("--font-display").trim() || "sans-serif";
       o.font = "900 " + fs + "px " + fam;
+      // fit to actual glyph widths: the per-char estimate above overshoots for wide fonts
+      const maxLineW = Math.max(...lines.map((l) => o.measureText(l).width), 1);
+      const targetW = W * 0.92;
+      if (maxLineW > targetW) {
+        fs *= targetW / maxLineW;
+        o.font = "900 " + fs + "px " + fam;
+      }
       const y0 = H * 0.42 + (lines.length === 1 ? fs * 0.5 : 0);
       lines.forEach((l, i) => o.fillText(l, W / 2, y0 + i * fs * 1.02));
       const data = o.getImageData(0, 0, W, H).data;
@@ -636,7 +694,10 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
     cancelAnimationFrame(this._raf);
     if (this._mm) window.removeEventListener("mousemove", this._mm);
     if (this._mu) window.removeEventListener("mouseup", this._mu);
+    if (this._tm) window.removeEventListener("touchmove", this._tm);
+    if (this._tu) window.removeEventListener("touchend", this._tu);
     if (this._onResize) window.removeEventListener("resize", this._onResize);
+    if (this._onResizeMobile) window.removeEventListener("resize", this._onResizeMobile);
   }
 
   // ---------- agent (tool-calling via [[directives]]) ----------
@@ -697,7 +758,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
 
   // ---------- render ----------
   render() {
-    const { win, zTop, booting } = this.state;
+    const { win, zTop, booting, mobile } = this.state;
 
     const chips = [
       { label: "> take the wheel — give me a tour", onClick: () => this.runHijack() },
@@ -772,14 +833,22 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
             animation: booting ? "none" : "fadeUp .5s ease .15s backwards",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 13 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
+            <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 13, whiteSpace: "nowrap" }}>
               CHAITANYA<span style={{ color: "var(--cyan)" }}>_OS</span>
             </span>
-            <span style={{ color: "var(--muted)" }}>v2.0 · agentic build</span>
+            {!mobile && <span style={{ color: "var(--muted)" }}>v2.0 · agentic build</span>}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 18, color: "var(--muted)" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: mobile ? 10 : 18,
+              color: "var(--muted)",
+              minWidth: 0,
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap" }}>
               <span
                 style={{
                   width: 7,
@@ -787,11 +856,14 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
                   borderRadius: "50%",
                   background: "var(--cyan)",
                   animation: "dotPulse 2s infinite",
+                  flexShrink: 0,
                 }}
               />
-              chaitanya.agent ONLINE
+              {mobile ? "ONLINE" : "chaitanya.agent ONLINE"}
             </span>
-            <span data-clock="">--:--:--</span>
+            <span data-clock="" style={{ whiteSpace: "nowrap" }}>
+              --:--:--
+            </span>
           </div>
         </div>
 
@@ -827,6 +899,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
             >
               <header
                 onMouseDown={(e) => this.startDrag(e, d.id)}
+                onTouchStart={(e) => this.startDragTouch(e, d.id)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -894,7 +967,7 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
           <div
             style={{
               position: "absolute",
-              bottom: 92,
+              bottom: mobile ? 120 : 92,
               left: "50%",
               transform: "translateX(-50%)",
               zIndex: 44,
@@ -911,7 +984,9 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
               background: "rgba(5,5,7,.6)",
               backdropFilter: "blur(6px)",
               pointerEvents: "none",
-              whiteSpace: "nowrap",
+              whiteSpace: mobile ? "normal" : "nowrap",
+              maxWidth: mobile ? "calc(100vw - 28px)" : undefined,
+              textAlign: mobile ? "center" : undefined,
               animation: "fadeUpCentered .6s ease 1.1s backwards",
             }}
           >
@@ -924,13 +999,16 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
         <div
           style={{
             position: "absolute",
-            bottom: 16,
+            bottom: mobile ? 10 : 16,
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 45,
             display: "flex",
-            gap: 8,
-            padding: 8,
+            flexWrap: mobile ? "wrap" : "nowrap",
+            justifyContent: "center",
+            gap: mobile ? 6 : 8,
+            padding: mobile ? 6 : 8,
+            maxWidth: mobile ? "calc(100vw - 12px)" : undefined,
             border: "1px solid var(--line)",
             borderRadius: 10,
             background: "rgba(5,5,7,.75)",
@@ -962,11 +1040,11 @@ export default class ChaitanyaOs extends React.Component<Record<string, never>, 
                   border: `1px solid ${open ? "var(--cyan)" : "var(--line)"}`,
                   color: "var(--fg)",
                   borderRadius: 7,
-                  padding: "9px 13px",
+                  padding: mobile ? "7px 9px" : "9px 13px",
                   fontFamily: MONO,
                   fontSize: 10.5,
                   letterSpacing: ".05em",
-                  minWidth: 74,
+                  minWidth: mobile ? 58 : 74,
                 }}
               >
                 <span style={{ fontSize: 15, color: "var(--cyan)" }}>{d.icon}</span>
